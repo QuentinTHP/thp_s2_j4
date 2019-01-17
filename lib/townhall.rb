@@ -29,7 +29,10 @@ end
 def get_townhall_urls
     array_urls = []
     $doc2.xpath('//td/p/a/@href').each do |urls|  
-        array_urls << urls.text
+        urls = urls.text 
+        urls.slice!(0)
+        urls = "https://annuaire-des-mairies.com" + urls
+        array_urls << urls
     end
     puts array_urls
 end
