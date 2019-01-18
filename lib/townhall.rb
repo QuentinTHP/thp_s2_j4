@@ -3,22 +3,17 @@ require 'nokogiri'
 require 'open-uri'
 require 'pry'
 PAGE_URL1 = "https://www.annuaire-des-mairies.com/95/avernes.html"
-PAGE_URL2 = "https://annuaire-des-mairies.com/val-d-oise.html"
 
 puts "\e[H\e[2J"    #clear le terminal
 
 
-$doc1 = Nokogiri::HTML(open(PAGE_URL1))
-$doc2 = Nokogiri::HTML(open(PAGE_URL2))
+doc2 = Nokogiri::HTML(open("https://annuaire-des-mairies.com/val-d-oise.html"))
 
 
-# Récupère l'email d'une mairie à partir de l'URL de cette dernière
-def get_townhall_email()
-    array_mails = []
-    $doc1.xpath('/html/body/div/main/section[2]/div/table/tbody/tr[4]/td[2]').each do |mails|
-      array_mails << mails.text 
-    end
-print array_mails
+# Method de recherche d'email, avec l'adresse html de chaque ville
+def get_townhall_email(townhall_url)
+    email = townhall_url.xpath('/html/body/div/main/section[2]/div/table/tbody/tr[4]/td[2]')
+    return email.text 
 end
 
 #get_townhall_email()
@@ -26,34 +21,34 @@ end
 
 
 # Récupére toutes les URLs des villes du Val d'Oise
-def get_townhall_urls
-    array_urls = []
-    $doc2.xpath('//td/p/a/@href').each do |urls|  
-        urls = urls.text 
-        urls.slice!(0)
-        urls = "https://annuaire-des-mairies.com" + urls
-        array_urls << urls
+def get_townhall_urls(doc2)
+    # Initialisation des arrays
+    array_emails = []
+    array_villes = []
+    array_fin = []
+    # Boucle array villes
+    doc2.xpath('//td/p/a').each do |ville|
+          ville = ville.text
+          array_villes << ville
     end
-    puts array_urls
+    # Boucle array emails. Recupération des url
+    doc2.xpath('//td/p/a/@href').each do |urls|  
+        urls = urls.text 
+        # Retrait du point devan les liens
+        urls.slice!(0)
+        # Ajout du début du lien
+        urls = "https://annuaire-des-mairies.com" + urls
+        # Appel de la fonction de recherche d'email avec le nouveau lien
+        emails = get_townhall_email(Nokogiri::HTML(open(urls)))
+        array_emails << emails
+    end
+    # Création hash joignant les viles et les emails
+    hash = Hash[array_villes.zip(array_emails)]
+    # Création d'un array de hash
+    hash.each {|i| array_fin << {i[0] => i[1]}}
+    puts array_fin
 end
 
-get_townhall_urls
+get_townhall_urls(doc2)
 
 
-# Récupére tout les nom des villes !
-#$doc2.xpath('//td/p/a').each do |urls|  
-
-
-#$doc2.css("a[@class=lientxt]/@href").each do |urls|  
-
-#//*[@id="voyance-par-telephone"]/table/tbody/tr[2]/td/table/tbody/tr
-
-    # Xpath mails de la 1ere mairie 
-   # /html/body/div/main/section[2]/div/table/tbody/tr[4]/td[2]
-
-# Xpath de l'url de la mairie du ABLEIGES
- #  //*[@id="voyance-par-telephone"]/table/tbody/tr[2]/td/table/tbody/tr/td[1]/p/a[1]
-
-
- #argenteil 
- #//*[@id="voyance-par-telephone"]/table/tbody/tr[2]/td/table/tbody/tr/td[1]/p/a[6]
